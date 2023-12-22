@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+export NODE_OPTIONS=--no-experimental-fetch 
 
 # Compile editor/main.ts into build/editor/main.js and dependencies
 npx tsc

@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+export NODE_OPTIONS=--no-experimental-fetch 
 
 # Compile player/main.ts into build/player/main.js and dependencies
 npx tsc -p tsconfig_player.json

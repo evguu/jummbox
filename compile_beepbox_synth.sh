@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+export NODE_OPTIONS=--no-experimental-fetch
 
 # Compile synth/synth.ts into build/synth/synth.js and dependencies
 npx tsc -p tsconfig_synth_only.json
