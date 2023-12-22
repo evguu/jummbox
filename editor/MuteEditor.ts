@@ -4,7 +4,7 @@ import { SongDocument } from "./SongDocument";
 import { HTML } from "imperative-html/dist/esm/elements-strict";
 import { ColorConfig } from "./ColorConfig";
 import { InputBox } from "./HTMLWrapper";
-import { ChangeChannelOrder, ChangeChannelName, ChangeRemoveChannel } from "./changes";
+import { ChangeChannelOrder, ChangeChannelName, ChangeRemoveChannel, ChangePatternNumbers } from "./changes";
 import { Config } from "../synth/SynthConfig";
 import { SongEditor } from "./SongEditor";
 
@@ -157,19 +157,28 @@ export class MuteEditor {
 				let identifier = this._doc.song.channels[this._channelDropDownChannel].name.slice(0, 5);
 
 				let chordChannel;
+				// @ts-ignore
+				let chordChannelIndex: number = -1;
 				let rhythmChannel;
+				// @ts-ignore
+				let rhythmChannelIndex: number = -1;
 				let resultChannel;
+				// @ts-ignore
+				let resultChannelIndex: number = -1;
 
-				for (let channel of this._doc.song.channels){
+				for (let [index, channel] of this._doc.song.channels.entries()){
 					switch (channel.name){
 						case `${identifier}-Ch-LC`:
 							chordChannel = channel;
+							chordChannelIndex = index;
 							break;
 						case `${identifier}-Rh-LC`:
 							rhythmChannel = channel;
+							rhythmChannelIndex = index;
 							break;
 						case `${identifier}-Mg-LC`:
 							resultChannel = channel;
+							resultChannelIndex = index;
 							break;	
 					}
 				}
@@ -178,6 +187,11 @@ export class MuteEditor {
 					alert('Corrupted LitChord setup. No operations performed.');
 					break;
 				}
+
+				// Clear the result channel patterns.
+				this._doc.record(new ChangePatternNumbers(this._doc, 0, 0, resultChannelIndex, resultChannel.bars.length, 1));
+
+				// TODO: Use the Ch and Rh channel pattern combination to fill in the result channel
 
 				break;
 			case "rename":
