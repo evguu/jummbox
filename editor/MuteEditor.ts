@@ -138,21 +138,46 @@ export class MuteEditor {
 		switch (this._channelDropDown.value) {
 			case "chordMagic":
 				this._doc.channel = this._channelDropDownChannel;
-				if (this._doc.song.channels[this._channelDropDownChannel].name.endsWith('-LC')){
-					break;
+
+				// If this channel has not yet been initialized for LitChords, initialize it
+				if (!this._doc.song.channels[this._channelDropDownChannel].name.endsWith('-LC')){
+					let channelIdentifier: string = Math.random().toString(36).slice(2, 7);
+					
+					this._doc.selection.insertChannel();
+					let ch2 = this._doc.song.channels[this._channelDropDownChannel + 1];
+					ch2.name = channelIdentifier + '-Rh-LC';
+
+					this._doc.selection.insertChannel();
+					let ch3 = this._doc.song.channels[this._channelDropDownChannel + 2];
+					ch3.name = channelIdentifier + '-Mg-LC';
+
+					this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Ch-LC'));
 				}
 
-				let channelIdentifier: string = Math.random().toString(36).slice(5);
-				
-				this._doc.selection.insertChannel();
-				let ch2 = this._doc.song.channels[this._channelDropDownChannel + 1];
-				ch2.name = channelIdentifier + '-Rh-LC';
+				let identifier = this._doc.song.channels[this._channelDropDownChannel].name.slice(0, 5);
 
-				this._doc.selection.insertChannel();
-				let ch3 = this._doc.song.channels[this._channelDropDownChannel + 2];
-				ch3.name = channelIdentifier + '-Mg-LC';
+				let chordChannel;
+				let rhythmChannel;
+				let resultChannel;
 
-				this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Ch-LC'));
+				for (let channel of this._doc.song.channels){
+					switch (channel.name){
+						case `${identifier}-Ch-LC`:
+							chordChannel = channel;
+							break;
+						case `${identifier}-Rh-LC`:
+							rhythmChannel = channel;
+							break;
+						case `${identifier}-Mg-LC`:
+							resultChannel = channel;
+							break;	
+					}
+				}
+
+				if (chordChannel == null || rhythmChannel == null || resultChannel == null){
+					alert('Corrupted LitChord setup. No operations performed.');
+					break;
+				}
 
 				break;
 			case "rename":
