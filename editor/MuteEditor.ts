@@ -19,7 +19,7 @@ export class MuteEditor {
 	public readonly _channelNameInput: InputBox = new InputBox(HTML.input({ style: `color: ${ColorConfig.primaryText}; background-color: ${ColorConfig.uiWidgetFocus}; margin-top: -2px; display: none; width: 6em; position: absolute; border-radius: 0.2em; z-index: 2;`, "color": ColorConfig.primaryText }, ""), this._doc, (oldValue: string, newValue: string) => new ChangeChannelName(this._doc, oldValue, newValue));
 
 	private readonly _channelDropDown: HTMLSelectElement = HTML.select({ style: "width: 0px; left: 19px; height: 19px; position:absolute; opacity:0" },
-
+		HTML.option({ value: "chordMagic" }, "Litnine's chord magic"), // TODO
 		HTML.option({ value: "rename" }, "Rename..."),
 		HTML.option({ value: "chnUp" }, "Move Channel Up"),
 		HTML.option({ value: "chnDown" }, "Move Channel Down"),
@@ -136,6 +136,9 @@ export class MuteEditor {
 		//console.log("handler " + this._channelDropDownOpen);
 
 		switch (this._channelDropDown.value) {
+			case "chordMagic":
+				alert('Henlo uwu');
+				break;
 			case "rename":
 				this._channelNameInput.input.style.setProperty("display", "");
 				this._channelNameInput.input.style.setProperty("transform", this._channelNameDisplay.style.getPropertyValue("transform"));
