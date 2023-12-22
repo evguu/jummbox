@@ -137,7 +137,19 @@ export class MuteEditor {
 
 		switch (this._channelDropDown.value) {
 			case "chordMagic":
-				alert('Henlo uwu');
+				this._doc.channel = this._channelDropDownChannel;
+
+				let channelIdentifier: string = Math.random().toString(36).slice(5);
+				this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Chords'));
+
+				this._doc.selection.resetBoxSelection();
+				this._doc.selection.insertChannel();
+				//this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Chords2'));
+
+				this._doc.selection.resetBoxSelection();
+				this._doc.selection.insertChannel();
+				//this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Chords3'));
+
 				break;
 			case "rename":
 				this._channelNameInput.input.style.setProperty("display", "");
