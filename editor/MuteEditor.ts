@@ -140,15 +140,16 @@ export class MuteEditor {
 				this._doc.channel = this._channelDropDownChannel;
 
 				let channelIdentifier: string = Math.random().toString(36).slice(5);
+				
+				this._doc.selection.insertChannel();
+				let ch2 = this._doc.song.channels[this._channelDropDownChannel + 1];
+				ch2.name = channelIdentifier + '-Pattern';
+
+				this._doc.selection.insertChannel();
+				let ch3 = this._doc.song.channels[this._channelDropDownChannel + 2];
+				ch3.name = channelIdentifier + '-Result';
+
 				this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Chords'));
-
-				this._doc.selection.resetBoxSelection();
-				this._doc.selection.insertChannel();
-				//this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Chords2'));
-
-				this._doc.selection.resetBoxSelection();
-				this._doc.selection.insertChannel();
-				//this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Chords3'));
 
 				break;
 			case "rename":
