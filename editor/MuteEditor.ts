@@ -7,6 +7,8 @@ import { InputBox } from "./HTMLWrapper";
 import { ChangeChannelOrder, ChangeChannelName, ChangeRemoveChannel, ChangePatternNumbers } from "./changes";
 import { Config } from "../synth/SynthConfig";
 import { SongEditor } from "./SongEditor";
+//@ts-ignore
+import {NotePin, Note, Pattern, Instrument, Channel, Song, Synth} from "../synth/synth";
 
 //namespace beepbox {
 export class MuteEditor {
@@ -191,8 +193,23 @@ export class MuteEditor {
 				// Clear the result channel patterns.
 				this._doc.record(new ChangePatternNumbers(this._doc, 0, 0, resultChannelIndex, resultChannel.bars.length, 1));
 
-				// TODO: Use the Ch and Rh channel pattern combination to fill in the result channel
+				resultChannel.bars = new Array(resultChannel.bars.length).fill(0);
+				resultChannel.patterns = [];
+				
+				// Rules for rhythm channel:
+				// Base note is 36 which corresponds to the first note of the chord.
+				// Any pitch above corresponds to the next note in chord.
+				// Rising a note an octave above will raise the chord note an octave above. Same works with lowering down an octave.
+				// If there are not enough notes in a chord to play the requested one, request will be ignored.
+				
+				// Any bends in the rhythm/chord are ignored.
+				// The chord note corresponding to the rhythm note is sampled at the start of the rhythm note. Any chord changes mid-rhythm note will be ignored.
 
+				
+
+
+				// TODO: Use the Ch and Rh channel pattern combination to fill in the result channel
+				console.log(this);
 				break;
 			case "rename":
 				this._channelNameInput.input.style.setProperty("display", "");

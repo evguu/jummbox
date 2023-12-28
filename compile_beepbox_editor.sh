@@ -19,10 +19,7 @@ npx rollup build/editor/main.js \
 npx terser \
 	website/beepbox_editor.js \
 	--source-map "content='website/beepbox_editor.js.map',url=beepbox_editor.min.js.map" \
-	-o website/beepbox_editor.min.js \
-	--compress \
-	--mangle \
-	--mangle-props regex="/^_.+/;"
+	-o website/beepbox_editor.min.js
 
 # Combine the html and js into a single file for the offline version
 sed \
