@@ -12,9 +12,7 @@ import {NotePin, Note, Pattern, Instrument, Channel, Song, Synth} from "../synth
 
 //namespace beepbox {
 
-function doLitChordMagic(doc: SongDocument, channelIndex: number){
-	doc.channel = channelIndex;
-
+export function doLitChordMagic(doc: SongDocument, channelIndex: number){
 	// If this channel has not yet been initialized for LitChords, initialize it
 	if (!doc.song.channels[channelIndex].name.endsWith('-LC')){
 		let channelIdentifier: string = Math.random().toString(36).slice(2, 7);

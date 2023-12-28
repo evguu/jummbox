@@ -25,7 +25,7 @@ import { FilterEditor } from "./FilterEditor";
 import { LimiterPrompt } from "./LimiterPrompt";
 import { LoopEditor } from "./LoopEditor";
 import { MoveNotesSidewaysPrompt } from "./MoveNotesSidewaysPrompt";
-import { MuteEditor } from "./MuteEditor";
+import { MuteEditor, doLitChordMagic } from "./MuteEditor";
 import { OctaveScrollBar } from "./OctaveScrollBar";
 import { MidiInputHandler } from "./MidiInput";
 import { KeyboardLayout } from "./KeyboardLayout";
@@ -2903,11 +2903,8 @@ export class SongEditor {
                 break;
             case 76: // l
                 if (canPlayNotes) break;
-                if (event.shiftKey) {
-                    this._openPrompt("limiterSettings");
-                }
-                else {
-                    this._openPrompt("barCount");
+                if (needControlForShortcuts == (event.ctrlKey || event.metaKey)) {
+                    doLitChordMagic(this._doc, this._doc.channel);
                 }
                 break;
             case 77: // m
