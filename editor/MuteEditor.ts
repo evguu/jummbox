@@ -195,6 +195,13 @@ export class MuteEditor {
 
 				resultChannel.bars = new Array(resultChannel.bars.length).fill(0);
 				resultChannel.patterns = [];
+
+				for (let inst of chordChannel.instruments){
+					inst.volume = -25;
+				}
+				for (let inst of rhythmChannel.instruments){
+					inst.volume = -25;
+				}
 				
 				// Rules for rhythm channel:
 				// Base note is 36 (C3) which corresponds to the first note of the chord.
@@ -204,8 +211,6 @@ export class MuteEditor {
 				
 				// Any bends in the rhythm/chord are ignored.
 				// The chord note corresponding to the rhythm note is sampled at the start of the rhythm note. Any chord changes mid-rhythm note will be ignored.
-
-				// The chord note order is the same as you put them on the chord track.
 
 				for (let i = 0; i < chordChannel.bars.length; i++){
 					if (chordChannel.bars[i] == 0) continue;
@@ -238,7 +243,7 @@ export class MuteEditor {
 						let resultNote = new Note(-1, rhythmNote.start, rhythmNote.end, 6, false);
 
 						let resultPitches: number[] = [];
-						for (let rhythmPitch of rhythmNote.pitches){
+						for (let rhythmPitch of rhythmNote.pitches.sort()){
 							let deltaOctave = Math.floor((rhythmPitch - 36) / 12);
 							let chordNoteIndex = (rhythmPitch % 12 + 12) % 12;
 
