@@ -11,6 +11,132 @@ import { SongEditor } from "./SongEditor";
 import {NotePin, Note, Pattern, Instrument, Channel, Song, Synth} from "../synth/synth";
 
 //namespace beepbox {
+
+function doLitChordMagic(doc: SongDocument, channelIndex: number){
+	doc.channel = channelIndex;
+
+	// If this channel has not yet been initialized for LitChords, initialize it
+	if (!doc.song.channels[channelIndex].name.endsWith('-LC')){
+		let channelIdentifier: string = Math.random().toString(36).slice(2, 7);
+		
+		doc.selection.insertChannel();
+		let ch2 = doc.song.channels[channelIndex + 1];
+		ch2.name = channelIdentifier + '-Rh-LC';
+
+		doc.selection.insertChannel();
+		let ch3 = doc.song.channels[channelIndex + 2];
+		ch3.name = channelIdentifier + '-Mg-LC';
+
+		doc.record(new ChangeChannelName(doc, '', channelIdentifier + '-Ch-LC'));
+	}
+
+	let identifier = doc.song.channels[channelIndex].name.slice(0, 5);
+
+	let chordChannel;
+	// @ts-ignore
+	let chordChannelIndex: number = -1;
+	let rhythmChannel;
+	// @ts-ignore
+	let rhythmChannelIndex: number = -1;
+	let resultChannel;
+	// @ts-ignore
+	let resultChannelIndex: number = -1;
+
+	for (let [index, channel] of doc.song.channels.entries()){
+		switch (channel.name){
+			case `${identifier}-Ch-LC`:
+				chordChannel = channel;
+				chordChannelIndex = index;
+				break;
+			case `${identifier}-Rh-LC`:
+				rhythmChannel = channel;
+				rhythmChannelIndex = index;
+				break;
+			case `${identifier}-Mg-LC`:
+				resultChannel = channel;
+				resultChannelIndex = index;
+				break;	
+		}
+	}
+
+	if (chordChannel == null || rhythmChannel == null || resultChannel == null){
+		alert('Corrupted LitChord setup. No operations performed.');
+		return;
+	}
+
+	// Clear the result channel patterns.
+	doc.record(new ChangePatternNumbers(doc, 0, 0, resultChannelIndex, resultChannel.bars.length, 1));
+
+	resultChannel.bars = new Array(resultChannel.bars.length).fill(0);
+	resultChannel.patterns = [];
+
+	for (let inst of chordChannel.instruments){
+		inst.volume = -25;
+	}
+	for (let inst of rhythmChannel.instruments){
+		inst.volume = -25;
+	}
+	
+	// Rules for rhythm channel:
+	// Base note is 36 (C3) which corresponds to the first note of the chord.
+	// Any pitch above corresponds to the next note in chord.
+	// Rising a note an octave above will raise the chord note an octave above. Same works with lowering down an octave.
+	// If there are not enough notes in a chord to play the requested one, request will be ignored.
+	
+	// Any bends in the rhythm/chord are ignored.
+	// The chord note corresponding to the rhythm note is sampled at the start of the rhythm note. Any chord changes mid-rhythm note will be ignored.
+
+	for (let i = 0; i < chordChannel.bars.length; i++){
+		if (chordChannel.bars[i] == 0) continue;
+		if (rhythmChannel.bars[i] == 0) continue;
+		if (chordChannel.patterns[chordChannel.bars[i] - 1].notes.length == 0) continue;
+		if (rhythmChannel.patterns[rhythmChannel.bars[i] - 1].notes.length == 0) continue;
+
+		let resultPattern = new Pattern();
+		resultChannel.patterns.push(resultPattern);
+		resultChannel.bars[i] = resultChannel.patterns.length; // No this is not a mistake, bars stores index + 1 so this is fine.
+
+		let chordPattern = chordChannel.patterns[chordChannel.bars[i] - 1];
+		let rhythmPattern = rhythmChannel.patterns[rhythmChannel.bars[i] - 1];
+
+		let chordNotes = chordPattern.notes;
+		let rhythmNotes = rhythmPattern.notes;
+
+		let resultNotes: Note[] = [];
+
+		for (let rhythmNote of rhythmNotes){
+			// Find the most recent chord before or at this note start.
+			let targetChordNote;
+			for (let chordNote of chordNotes){
+				if (chordNote.start > rhythmNote.start) break;
+				targetChordNote = chordNote;
+			}
+
+			if (targetChordNote == undefined || targetChordNote == null) continue;
+
+			let resultNote = new Note(-1, rhythmNote.start, rhythmNote.end, 6, false);
+
+			let resultPitches: number[] = [];
+			for (let rhythmPitch of rhythmNote.pitches.sort()){
+				let deltaOctave = Math.floor((rhythmPitch - 36) / 12);
+				let chordNoteIndex = (rhythmPitch % 12 + 12) % 12;
+
+				if (chordNoteIndex >= targetChordNote.pitches.length) continue;
+
+				let resultPitch = targetChordNote.pitches[chordNoteIndex] + deltaOctave * 12;
+				resultPitches.push(resultPitch);
+			}
+
+			if (resultPitches.length > 0){
+				resultNote.pitches = resultPitches;
+				resultNotes.push(resultNote);
+			}
+		}
+
+		resultPattern.notes = resultNotes;
+	}
+}
+
 export class MuteEditor {
 	
 	private _cornerFiller: HTMLDivElement = HTML.div({style: `background: ${ColorConfig.editorBackground}; position: sticky; bottom: 0; left: 0; width: 32px; height: 30px;`});
@@ -139,128 +265,7 @@ export class MuteEditor {
 
 		switch (this._channelDropDown.value) {
 			case "chordMagic":
-				this._doc.channel = this._channelDropDownChannel;
-
-				// If this channel has not yet been initialized for LitChords, initialize it
-				if (!this._doc.song.channels[this._channelDropDownChannel].name.endsWith('-LC')){
-					let channelIdentifier: string = Math.random().toString(36).slice(2, 7);
-					
-					this._doc.selection.insertChannel();
-					let ch2 = this._doc.song.channels[this._channelDropDownChannel + 1];
-					ch2.name = channelIdentifier + '-Rh-LC';
-
-					this._doc.selection.insertChannel();
-					let ch3 = this._doc.song.channels[this._channelDropDownChannel + 2];
-					ch3.name = channelIdentifier + '-Mg-LC';
-
-					this._doc.record(new ChangeChannelName(this._doc, this._channelNameDisplay.textContent ?? '', channelIdentifier + '-Ch-LC'));
-				}
-
-				let identifier = this._doc.song.channels[this._channelDropDownChannel].name.slice(0, 5);
-
-				let chordChannel;
-				// @ts-ignore
-				let chordChannelIndex: number = -1;
-				let rhythmChannel;
-				// @ts-ignore
-				let rhythmChannelIndex: number = -1;
-				let resultChannel;
-				// @ts-ignore
-				let resultChannelIndex: number = -1;
-
-				for (let [index, channel] of this._doc.song.channels.entries()){
-					switch (channel.name){
-						case `${identifier}-Ch-LC`:
-							chordChannel = channel;
-							chordChannelIndex = index;
-							break;
-						case `${identifier}-Rh-LC`:
-							rhythmChannel = channel;
-							rhythmChannelIndex = index;
-							break;
-						case `${identifier}-Mg-LC`:
-							resultChannel = channel;
-							resultChannelIndex = index;
-							break;	
-					}
-				}
-
-				if (chordChannel == null || rhythmChannel == null || resultChannel == null){
-					alert('Corrupted LitChord setup. No operations performed.');
-					break;
-				}
-
-				// Clear the result channel patterns.
-				this._doc.record(new ChangePatternNumbers(this._doc, 0, 0, resultChannelIndex, resultChannel.bars.length, 1));
-
-				resultChannel.bars = new Array(resultChannel.bars.length).fill(0);
-				resultChannel.patterns = [];
-
-				for (let inst of chordChannel.instruments){
-					inst.volume = -25;
-				}
-				for (let inst of rhythmChannel.instruments){
-					inst.volume = -25;
-				}
-				
-				// Rules for rhythm channel:
-				// Base note is 36 (C3) which corresponds to the first note of the chord.
-				// Any pitch above corresponds to the next note in chord.
-				// Rising a note an octave above will raise the chord note an octave above. Same works with lowering down an octave.
-				// If there are not enough notes in a chord to play the requested one, request will be ignored.
-				
-				// Any bends in the rhythm/chord are ignored.
-				// The chord note corresponding to the rhythm note is sampled at the start of the rhythm note. Any chord changes mid-rhythm note will be ignored.
-
-				for (let i = 0; i < chordChannel.bars.length; i++){
-					if (chordChannel.bars[i] == 0) continue;
-					if (rhythmChannel.bars[i] == 0) continue;
-					if (chordChannel.patterns[chordChannel.bars[i] - 1].notes.length == 0) continue;
-					if (rhythmChannel.patterns[rhythmChannel.bars[i] - 1].notes.length == 0) continue;
-
-					let resultPattern = new Pattern();
-					resultChannel.patterns.push(resultPattern);
-					resultChannel.bars[i] = resultChannel.patterns.length; // No this is not a mistake, bars stores index + 1 so this is fine.
-
-					let chordPattern = chordChannel.patterns[chordChannel.bars[i] - 1];
-					let rhythmPattern = rhythmChannel.patterns[rhythmChannel.bars[i] - 1];
-
-					let chordNotes = chordPattern.notes;
-					let rhythmNotes = rhythmPattern.notes;
-
-					let resultNotes: Note[] = [];
-
-					for (let rhythmNote of rhythmNotes){
-						// Find the most recent chord before or at this note start.
-						let targetChordNote;
-						for (let chordNote of chordNotes){
-							if (chordNote.start > rhythmNote.start) break;
-							targetChordNote = chordNote;
-						}
-
-						if (targetChordNote == undefined || targetChordNote == null) continue;
-
-						let resultNote = new Note(-1, rhythmNote.start, rhythmNote.end, 6, false);
-
-						let resultPitches: number[] = [];
-						for (let rhythmPitch of rhythmNote.pitches.sort()){
-							let deltaOctave = Math.floor((rhythmPitch - 36) / 12);
-							let chordNoteIndex = (rhythmPitch % 12 + 12) % 12;
-
-							if (chordNoteIndex >= targetChordNote.pitches.length) continue;
-
-							let resultPitch = targetChordNote.pitches[chordNoteIndex] + deltaOctave * 12;
-							resultPitches.push(resultPitch);
-						}
-
-						if (resultPitches.length > 0){
-							resultNote.pitches = resultPitches;
-							resultNotes.push(resultNote);
-						}
-					}
-
-					resultPattern.notes = resultNotes;
-				}
+				doLitChordMagic(this._doc, this._channelDropDownChannel);
 				break;
 			case "rename":
 				this._channelNameInput.input.style.setProperty("display", "");
