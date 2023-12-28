@@ -220,14 +220,12 @@ export class MuteEditor {
 					let chordPattern = chordChannel.patterns[chordChannel.bars[i] - 1];
 					let rhythmPattern = rhythmChannel.patterns[rhythmChannel.bars[i] - 1];
 
-					//@ts-ignore
 					let chordNotes = chordPattern.notes;
-					//@ts-ignore
 					let rhythmNotes = rhythmPattern.notes;
 
 					let resultNotes: Note[] = [];
 
-					/*for (let rhythmNote of rhythmNotes){
+					for (let rhythmNote of rhythmNotes){
 						// Find the most recent chord before or at this note start.
 						let targetChordNote;
 						for (let chordNote of chordNotes){
@@ -235,7 +233,7 @@ export class MuteEditor {
 							targetChordNote = chordNote;
 						}
 
-						if (targetChordNote == undefined) continue;
+						if (targetChordNote == undefined || targetChordNote == null) continue;
 
 						let resultNote = new Note(-1, rhythmNote.start, rhythmNote.end, 6, false);
 
@@ -250,15 +248,14 @@ export class MuteEditor {
 							resultPitches.push(resultPitch);
 						}
 
-						resultNote.pitches = resultPitches;
-						resultNotes.push(resultNote);
-					}*/
+						if (resultPitches.length > 0){
+							resultNote.pitches = resultPitches;
+							resultNotes.push(resultNote);
+						}
+					}
 
 					resultPattern.notes = resultNotes;
 				}
-
-				// Debug information.
-				console.log(this);
 				break;
 			case "rename":
 				this._channelNameInput.input.style.setProperty("display", "");
