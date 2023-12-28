@@ -197,7 +197,7 @@ export class MuteEditor {
 				resultChannel.patterns = [];
 				
 				// Rules for rhythm channel:
-				// Base note is 36 which corresponds to the first note of the chord.
+				// Base note is 36 (C3) which corresponds to the first note of the chord.
 				// Any pitch above corresponds to the next note in chord.
 				// Rising a note an octave above will raise the chord note an octave above. Same works with lowering down an octave.
 				// If there are not enough notes in a chord to play the requested one, request will be ignored.
@@ -205,10 +205,59 @@ export class MuteEditor {
 				// Any bends in the rhythm/chord are ignored.
 				// The chord note corresponding to the rhythm note is sampled at the start of the rhythm note. Any chord changes mid-rhythm note will be ignored.
 
-				
+				// The chord note order is the same as you put them on the chord track.
 
+				for (let i = 0; i < chordChannel.bars.length; i++){
+					if (chordChannel.bars[i] == 0) continue;
+					if (rhythmChannel.bars[i] == 0) continue;
+					if (chordChannel.patterns[chordChannel.bars[i] - 1].notes.length == 0) continue;
+					if (rhythmChannel.patterns[rhythmChannel.bars[i] - 1].notes.length == 0) continue;
 
-				// TODO: Use the Ch and Rh channel pattern combination to fill in the result channel
+					let resultPattern = new Pattern();
+					resultChannel.patterns.push(resultPattern);
+					resultChannel.bars[i] = resultChannel.patterns.length; // No this is not a mistake, bars stores index + 1 so this is fine.
+
+					let chordPattern = chordChannel.patterns[chordChannel.bars[i] - 1];
+					let rhythmPattern = rhythmChannel.patterns[rhythmChannel.bars[i] - 1];
+
+					//@ts-ignore
+					let chordNotes = chordPattern.notes;
+					//@ts-ignore
+					let rhythmNotes = rhythmPattern.notes;
+
+					let resultNotes: Note[] = [];
+
+					/*for (let rhythmNote of rhythmNotes){
+						// Find the most recent chord before or at this note start.
+						let targetChordNote;
+						for (let chordNote of chordNotes){
+							if (chordNote.start > rhythmNote.start) break;
+							targetChordNote = chordNote;
+						}
+
+						if (targetChordNote == undefined) continue;
+
+						let resultNote = new Note(-1, rhythmNote.start, rhythmNote.end, 6, false);
+
+						let resultPitches: number[] = [];
+						for (let rhythmPitch of rhythmNote.pitches){
+							let deltaOctave = Math.floor((rhythmPitch - 36) / 12);
+							let chordNoteIndex = (rhythmPitch % 12 + 12) % 12;
+
+							if (chordNoteIndex >= targetChordNote.pitches.length) continue;
+
+							let resultPitch = targetChordNote.pitches[chordNoteIndex] + deltaOctave * 12;
+							resultPitches.push(resultPitch);
+						}
+
+						resultNote.pitches = resultPitches;
+						resultNotes.push(resultNote);
+					}*/
+
+					resultPattern.notes = resultNotes;
+				}
+
+				// Debug information.
 				console.log(this);
 				break;
 			case "rename":
