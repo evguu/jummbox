@@ -119,7 +119,7 @@ export function doLitChordMagic(doc: SongDocument, channelIndex: number){
 				let deltaOctave = Math.floor((rhythmPitch - 36) / 12);
 				let chordNoteIndex = (rhythmPitch % 12 + 12) % 12;
 
-				if (chordNoteIndex >= targetChordNote.pitches.length) continue;
+				if (chordNoteIndex >= targetChordNote.pitches.sort().length) continue;
 
 				let resultPitch = targetChordNote.pitches[chordNoteIndex] + deltaOctave * 12;
 				resultPitches.push(resultPitch);
