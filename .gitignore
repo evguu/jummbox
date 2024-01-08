@@ -6,7 +6,6 @@
 /website/**/beepbox*.js.map
 /website/**/jummbox*.js
 /website/**/jummbox*.js.map
-/website/jummbox_offline.html
 /editor/*.js
 /player/*.js
 /synth/*.js
